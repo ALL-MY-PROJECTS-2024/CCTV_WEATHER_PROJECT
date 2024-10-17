@@ -63,9 +63,9 @@ public class SecurityConfig {
 
         //요청 URL별 접근 제한
         http.authorizeHttpRequests((auth)->{
-            auth.requestMatchers("/","/join","/login").permitAll();
-            auth.requestMatchers("/main").permitAll();
-
+//            auth.requestMatchers("/","/join","/login").permitAll();
+//            auth.requestMatchers("/main").permitAll();
+            auth.requestMatchers("*").permitAll();
             auth.anyRequest().authenticated();
         });
 
