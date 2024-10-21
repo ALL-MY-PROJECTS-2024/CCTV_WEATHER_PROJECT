@@ -1,19 +1,22 @@
 package com.example.app.restController;
 
 
+import io.github.bonigarcia.wdm.WebDriverManager;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,8 +24,115 @@ import java.util.List;
 @Slf4j
 public class CCTVRestController {
 
-    // 부산광역시_CCTV 설치 현황정보
+    @GetMapping("/cctv2")
+    public String cctv2() {
+        // WebDriverManager를 통해 ChromeDriver 설정
+        WebDriverManager.chromedriver().setup();
 
+        // Headless 모드로 ChromeDriver 설정
+        ChromeOptions options = new ChromeOptions();
+//        options.addArguments("--headless");  // UI 없이 실행
+//        options.addArguments("--no-sandbox");
+//        options.addArguments("--disable-dev-shm-usage");
+
+        // ChromeDriver 인스턴스 생성
+        WebDriver driver = new ChromeDriver(options);
+
+        try {
+            // 웹 페이지 열기
+            driver.get("https://safecity.busan.go.kr/#/");
+
+
+
+            // 페이지 로드 대기
+            Thread.sleep(3000);  // 페이지 로딩을 위해 잠시 대기 (필요 시 명시적으로 대기)
+
+            // 페이지 로드 후 DOM 가져오기 (JavaScript가 실행된 후의 상태)
+            // String pageSource = driver.getPageSource();
+            // 출력 또는 다른 처리 수행
+            //System.out.println(pageSource);
+
+            //팝업1 닫기 버튼 클릭
+            WebElement Popupbutton = driver.findElement(By.cssSelector(".popupClose"));
+            Popupbutton.click();
+            Thread.sleep(500);
+
+            //팝업2 닫기 버튼 클릭
+            WebElement Popupbutton2 = driver.findElement(By.cssSelector(".center"));
+            Popupbutton2.click();
+            Thread.sleep(500);
+
+            //재난감시 CCTV 클릭
+            WebElement 재난감시CCTV버튼 = driver.findElement(By.cssSelector(".map_dep1_ul>li:nth-child(1)"));
+            재난감시CCTV버튼.click();
+            Thread.sleep(100);
+
+            //교통감지끄기
+            List<WebElement> CCTVFrameEls = driver.findElements(By.cssSelector(".induationCheckBox ul li .selectOption.active"));
+            for(WebElement el : CCTVFrameEls)
+                el.click();
+            Thread.sleep(100);
+
+            //재난감지CCTV 켜기
+            WebElement CCTVFloodingEl = driver.findElement(By.cssSelector(".induationCheckBox ul li:nth-child(1) .selectOption"));
+            if(CCTVFloodingEl.getText().contains("OFF"))
+                CCTVFloodingEl.click();
+
+
+
+            // 원하는 img 태그만 찾기 (XPath 또는 CSS Selector 사용)
+            List<WebElement> 재난CCTVS = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane img"));
+            System.out.println("재난CCTVS SIZE : " + 재난CCTVS.size());
+            for(WebElement el : 재난CCTVS){
+                System.out.println(el);
+            }
+
+            재난CCTVS.get(0).click();
+
+
+
+            return "Page loaded successfully!";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error occurred during Selenium test.";
+        } finally {
+            // 브라우저 닫기
+            //driver.quit();
+        }
+    }
+
+
+    @GetMapping("/cctv1")
+    public void handleCctvRequest() throws Exception {
+        try {
+            // JSoup을 사용해 웹 페이지의 모든 DOM 요소를 가져오기
+            String url = "https://safecity.busan.go.kr/#/";  // 대상 웹 페이지 URL
+            Document doc = Jsoup.connect(url).get();  // 웹 페이지 파싱
+
+            // 전체 DOM 가져오기
+            Elements allElements = doc.getAllElements();
+            System.out.println(allElements);
+//            // 결과를 StringBuilder에 저장
+//            StringBuilder sb = new StringBuilder();
+//            sb.append("Total elements found: ").append(allElements.size()).append("\n\n");
+//
+//            // 모든 DOM 요소의 태그 이름 출력
+//            for (Element element : allElements) {
+//                System.out.println(element);
+//                sb.append("Tag: ").append(element.tagName()).append("\n");
+//            }
+
+//            return sb.toString();  // 결과 반환
+        } catch (IOException e) {
+            e.printStackTrace();
+//            return "Error occurred while fetching the DOM elements.";
+        }
+    }
+
+
+
+
+    // 부산광역시_CCTV 설치 현황정보
     @GetMapping("/cctv")
     public List<Item> cctv(){
         log.info("GET /cctv..");
