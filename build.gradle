@@ -69,8 +69,11 @@ dependencies {
 	implementation group: 'org.jsoup', name: 'jsoup', version: '1.18.1'
 
 	// Selenium WebDriver 의존성 추가
-	implementation 'org.seleniumhq.selenium:selenium-java:4.14.0'
-	implementation 'io.github.bonigarcia:webdrivermanager:5.4.0'
+	// Selenium Java
+	implementation 'org.seleniumhq.selenium:selenium-java:4.25.0'
+	// WebDriverManager for easier WebDriver management
+	implementation 'io.github.bonigarcia:webdrivermanager:5.9.2'
+
 
 }
 

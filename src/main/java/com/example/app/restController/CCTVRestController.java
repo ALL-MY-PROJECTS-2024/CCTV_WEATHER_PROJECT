@@ -1,47 +1,99 @@
 package com.example.app.restController;
 
 
+
 import io.github.bonigarcia.wdm.WebDriverManager;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+
+
 
 @RestController
 @Slf4j
 public class CCTVRestController {
 
-    @GetMapping("/cctv2")
-    public String cctv2() {
-        // WebDriverManager를 통해 ChromeDriver 설정
+    @GetMapping("/getMain")
+    public ResponseEntity<String> getMain(){
+
+        System.out.println("GET /getMain..");
         WebDriverManager.chromedriver().setup();
-
-        // Headless 모드로 ChromeDriver 설정
         ChromeOptions options = new ChromeOptions();
-//        options.addArguments("--headless");  // UI 없이 실행
-//        options.addArguments("--no-sandbox");
-//        options.addArguments("--disable-dev-shm-usage");
+        options.setBinary("/bin/google-chrome-stable");
 
-        // ChromeDriver 인스턴스 생성
         WebDriver driver = new ChromeDriver(options);
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
 
         try {
             // 웹 페이지 열기
             driver.get("https://safecity.busan.go.kr/#/");
 
+            // 페이지 로드 대기
+            Thread.sleep(3000); // 페이지 로드 대기
+
+//            // 팝업 닫기 및 원하는 동작 수행 (생략된 부분은 동일)
+//            WebElement Popupbutton = driver.findElement(By.cssSelector(".popupClose"));
+//            Popupbutton.click();
+//            Thread.sleep(500);
+//
+//            WebElement Popupbutton2 = driver.findElement(By.cssSelector(".center"));
+//            Popupbutton2.click();
+//            Thread.sleep(500);
+
+            // 여기서 HTML 전체 소스 가져오기
+            String pageSource = driver.getPageSource(); // HTML 소스 가져오기
+
+            return ResponseEntity.ok(pageSource); // HTML 소스를 그대로 반환
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred during Selenium test.");
+        } finally {
+            driver.quit();
+        }
+    }
+
+
+    @GetMapping("/cctv2")
+    public String cctv2() {
+        // WebDriverManager를 통해 ChromeDriver 설정
+//        WebDriverManager.chromedriver().setup();
+        WebDriverManager.chromedriver().driverVersion("130.0.6723.58").setup();
+
+        // Headless 모드로 ChromeDriver 설정
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless");  // UI 없이 실행
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+
+        // ChromeDriver 인스턴스 생성
+        WebDriver driver = new ChromeDriver(options);
+        options.setBinary("/bin/google-chrome-stable");
+
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+
+
+        try {
+            // 웹 페이지 열기
+            driver.get("https://safecity.busan.go.kr/#/");
 
 
             // 페이지 로드 대기
@@ -49,11 +101,13 @@ public class CCTVRestController {
 
             // 페이지 로드 후 DOM 가져오기 (JavaScript가 실행된 후의 상태)
             // String pageSource = driver.getPageSource();
+
             // 출력 또는 다른 처리 수행
             //System.out.println(pageSource);
 
             //팝업1 닫기 버튼 클릭
             WebElement Popupbutton = driver.findElement(By.cssSelector(".popupClose"));
+            System.out.println("Popupbutton" + Popupbutton);
             Popupbutton.click();
             Thread.sleep(500);
 
@@ -78,8 +132,6 @@ public class CCTVRestController {
             if(CCTVFloodingEl.getText().contains("OFF"))
                 CCTVFloodingEl.click();
 
-
-
             // 원하는 img 태그만 찾기 (XPath 또는 CSS Selector 사용)
             List<WebElement> 재난CCTVS = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane img"));
             System.out.println("재난CCTVS SIZE : " + 재난CCTVS.size());
@@ -88,7 +140,6 @@ public class CCTVRestController {
             }
 
             재난CCTVS.get(0).click();
-
 
 
             return "Page loaded successfully!";
