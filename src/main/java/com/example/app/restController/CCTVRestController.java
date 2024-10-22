@@ -3,6 +3,7 @@ package com.example.app.restController;
 
 
 import io.github.bonigarcia.wdm.WebDriverManager;
+import jakarta.servlet.annotation.WebListener;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -76,7 +77,13 @@ public class CCTVRestController {
 
 
 
+    List<WebElement> cctv2El = new ArrayList();
+    List<WebElement> clusterOne = new ArrayList();
 
+
+    Map<Integer,List<WebElement>> clusterMap = new LinkedHashMap<>();
+
+    int zoomLevel = 4 ;      //값이 올라갈수록 depth 반복
 
     @GetMapping("/cctv2")
     public List<WebElement> cctv2() {
@@ -111,15 +118,26 @@ public class CCTVRestController {
             //System.out.println(pageSource);
 
             //팝업1 닫기 버튼 클릭
+            WebElement PopupcheckOne = driver.findElement(By.cssSelector(".todayClose input[type='checkbox']"));
+            if(PopupcheckOne.isDisplayed())
+                PopupcheckOne.click();
+
             WebElement Popupbutton = driver.findElement(By.cssSelector(".popupClose"));
-            System.out.println("Popupbutton" + Popupbutton);
-            Popupbutton.click();
-            Thread.sleep(500);
+            if(Popupbutton.isDisplayed()){
+                Popupbutton.click();
+                Thread.sleep(500);
+            }
+
+            WebElement PopupcheckTwo = driver.findElement(By.cssSelector(".todayGuideClose input[type='checkbox']"));
+            if(PopupcheckTwo!=null)
+                PopupcheckTwo.click();
 
             //팝업2 닫기 버튼 클릭
             WebElement Popupbutton2 = driver.findElement(By.cssSelector(".center"));
-            Popupbutton2.click();
-            Thread.sleep(500);
+            if(Popupbutton2.isDisplayed()){
+                Popupbutton2.click();
+                Thread.sleep(500);
+            }
 
             //재난감시 CCTV 클릭
             WebElement 재난감시CCTV버튼 = driver.findElement(By.cssSelector(".map_dep1_ul>li:nth-child(1)"));
@@ -137,127 +155,96 @@ public class CCTVRestController {
             if(CCTVFloodingEl.getText().contains("OFF"))
                 CCTVFloodingEl.click();
 
-            //zommin - 5
+            //
             WebElement zoominEl = driver.findElement(By.cssSelector(".leaflet-control-zoom-out"));
-            zoominEl.click();Thread.sleep(100);
-            zoominEl.click();Thread.sleep(100);
-            zoominEl.click();Thread.sleep(100);
-            zoominEl.click();Thread.sleep(100);
-            zoominEl.click();Thread.sleep(100);
-            zoominEl.click();Thread.sleep(100);
-            zoominEl.click();Thread.sleep(100);
-            zoominEl.click();Thread.sleep(100);
-            zoominEl.click();Thread.sleep(100);
-            zoominEl.click();Thread.sleep(100);
-            zoominEl.click();Thread.sleep(100);
-            zoominEl.click();Thread.sleep(100);
-            zoominEl.click();Thread.sleep(100);
-            zoominEl.click();Thread.sleep(100);
+
+            zoominEl.click();Thread.sleep(500);
+            zoominEl.click();Thread.sleep(500);
+            zoominEl.click();Thread.sleep(500);
+            zoominEl.click();Thread.sleep(500);
+            zoominEl.click();Thread.sleep(500);
+            zoominEl.click();Thread.sleep(500);
+            zoominEl.click();Thread.sleep(500);
+            zoominEl.click();Thread.sleep(500);
+            zoominEl.click();Thread.sleep(500);
             Thread.sleep(1500);
             
             //최상위 클러스터 클릭
             WebElement 재난CCTV = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive"));
+            Thread.sleep(1000);
+            WebElement totalValue = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive div span"));
+            Thread.sleep(1000);
+            System.out.println("TOTAL :" + totalValue.getText());
             재난CCTV.click();
-            Thread.sleep(3000);
-
+            Thread.sleep(1000);
 
             //
             List<WebElement> ALLClusteredMarkers = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>div"));
-            System.out.println("ALLClusteredMarkers : " + ALLClusteredMarkers.size());
+            System.out.println("ALLClusteredMarkers size : " + ALLClusteredMarkers.size());
+            clusterOne.addAll(ALLClusteredMarkers);
+
+            //ONEDEPTH TEST
+            for(int i=0;i<clusterOne.size();i++){
+                System.out.println("i : " + i);
+
+                //페이지 새로고침
+                driver.navigate().refresh();
+                Thread.sleep(1000);
+                //재난감시 CCTV 클릭
+                재난감시CCTV버튼 = driver.findElement(By.cssSelector(".map_dep1_ul>li:nth-child(1)"));
+                재난감시CCTV버튼.click();
+                Thread.sleep(1000);
+
+                //교통감지끄기
+                CCTVFrameEls = driver.findElements(By.cssSelector(".induationCheckBox ul li .selectOption.active"));
+                for(WebElement el : CCTVFrameEls)
+                    el.click();
+                Thread.sleep(1000);
+
+                //재난감지CCTV 켜기
+                CCTVFloodingEl = driver.findElement(By.cssSelector(".induationCheckBox ul li:nth-child(1) .selectOption"));
+                if(CCTVFloodingEl.getText().contains("OFF"))
+                    CCTVFloodingEl.click();
+                Thread.sleep(1000);
+                zoominEl = driver.findElement(By.cssSelector(".leaflet-control-zoom-out"));
+                zoominEl.click();Thread.sleep(500);
+                zoominEl.click();Thread.sleep(500);
+                zoominEl.click();Thread.sleep(500);
+                zoominEl.click();Thread.sleep(500);
+                zoominEl.click();Thread.sleep(500);
+                zoominEl.click();Thread.sleep(500);
+                zoominEl.click();Thread.sleep(500);
+                zoominEl.click();Thread.sleep(500);
+                zoominEl.click();Thread.sleep(500);
+                Thread.sleep(1500);
+
+                //최상위 클러스터 클릭
+                재난CCTV = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive"));
+                재난CCTV.click();
+                Thread.sleep(1000);
+
+                //ONEDEPTH_GET
+                ALLClusteredMarkers = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>div"));
+                WebElement e = ALLClusteredMarkers.get(i);
+                WebElement valEl =  e.findElement((By.cssSelector("div span")));
+                System.out.println(valEl.getText());
+                e.click();
+
+
+                Thread.sleep(2000);
 
 
 
-            WebElement mapEl = driver.findElement(By.cssSelector("#map"));
-            System.out.println("map : " + mapEl);
-
-            // 자바스크립트를 사용하여 브라우저의 모든 전역 객체를 검색
-//            JavascriptExecutor js = (JavascriptExecutor) driver;
-//            List<String> keys = (List<String>) js.executeScript(
-//                    "return Object.keys(window);"
-//            );
-//
-//            // 전역 객체 목록 출력
-//            for (String key : keys) {
-//                System.out.println("Window 객체 이름: " + key);
-//            }
-
+            }
 
             //
-            try {
-                List<Map<String, Double>> markers = (List<Map<String, Double>>) ((JavascriptExecutor) driver).executeScript(
-
-                        "console.log('map instanceof L.Map:', map instanceof L.Map);"
-//                        "var markers = [];" +
-//                                "console.log('L', L);" +
-//                                "console.log('MAP', map);" +
-//                                "if (typeof L !== 'undefined' && typeof map !== 'undefined') {" +
-//                                "    map.eachLayer(function(layer) {" +
-//                                "        if (layer instanceof L.Marker) {" +
-//                                "            var latLng = layer.getLatLng();" +
-//                                "            markers.push({'lat': latLng.lat, 'lng': latLng.lng});" +
-//                                "        }" +
-//                                "    });" +
-//                                "} else {" +
-//                                "    console.log('Leaflet 또는 map 객체를 찾을 수 없습니다.');" +
-//                                "}" +
-//                                "return markers;"
-                );
-            } catch (JavascriptException e) {
-                System.out.println("JavaScript 오류 발생: " + e.getMessage());
-            }
-
-
-
-
-            //마커클릭해서 경로 가졍괴
-            List<WebElement> ALLImgMarkers = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>img"));
-            System.out.println("ALLImgMarkers : " + ALLImgMarkers.size());
-            for(WebElement e : ALLImgMarkers){
-                e.click();
-                System.out.println(e);
-                Thread.sleep(3000);
-
-                // 새로 열린 모든 창 핸들 가져오기
-                Set<String> allWindowHandles = driver.getWindowHandles();
-
-                // 현재 창의 핸들을 저장
-                String mainWindowHandle = driver.getWindowHandle();
-
-                // 새창 탐색
-                for (String windowHandle : allWindowHandles) {
-                    if (!windowHandle.equals(mainWindowHandle)) {
-                        // 새창으로 전환
-                        driver.switchTo().window(windowHandle);
-
-                        // 새창의 URL 확인
-                        String popupURL = driver.getCurrentUrl();
-                        System.out.println("팝업 창 URL: " + popupURL);
-
-                        // 팝업창 닫기
-                        driver.close();
-
-                        // 메인 창으로 다시 전환
-                        driver.switchTo().window(mainWindowHandle);
-                    }
-                }
-
-            }
-            
-            //클러스터 선별
-//            List<WebElement> Cluster = driver.findElements(By.cssSelector(".leaflet-marker-icon.marker-cluster.leaflet-zoom-animated.leaflet-interactive"));
-//            for(WebElement e : Cluster){
-//                e.click();
-//                Thread.sleep(2000);
-//            }
-
-
-            //마커 선별
-//            List<WebElement> markerList = driver.findElements(By.cssSelector(".leaflet-marker-icon.leaflet-zoom-animated.leaflet-interactive"));
-//            System.out.println("SIZE : " + markerList.size());
-////            for(WebElement e : markerList){
-////                e.click();
-////                Thread.sleep(2000);
-////            }
+//            List<WebElement> ALLClusteredMarkers = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>div"));
+//            System.out.println("ALLClusteredMarkers : " + ALLClusteredMarkers.size());
+//
+//
+//            //마커클릭해서 경로 가져오기
+//            List<WebElement> ALLImgMarkers = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>img"));
+//            System.out.println("ALLImgMarkers : " + ALLImgMarkers.size());
 
 
             return null;
@@ -270,36 +257,60 @@ public class CCTVRestController {
         }
     }
 
-
-
-
-//    @GetMapping("/cctv1")
-//    public void handleCctvRequest() throws Exception {
-//        try {
-//            // JSoup을 사용해 웹 페이지의 모든 DOM 요소를 가져오기
-//            String url = "https://safecity.busan.go.kr/#/";  // 대상 웹 페이지 URL
-//            Document doc = Jsoup.connect(url).get();  // 웹 페이지 파싱
+//    public void getClusterEls(WebDriver driver) throws InterruptedException {
 //
-//            // 전체 DOM 가져오기
-//            Elements allElements = doc.getAllElements();
-//            System.out.println(allElements);
-////            // 결과를 StringBuilder에 저장
-////            StringBuilder sb = new StringBuilder();
-////            sb.append("Total elements found: ").append(allElements.size()).append("\n\n");
-////
-////            // 모든 DOM 요소의 태그 이름 출력
-////            for (Element element : allElements) {
-////                System.out.println(element);
-////                sb.append("Tag: ").append(element.tagName()).append("\n");
-////            }
+//        //모든 클러스터 하나씩 열어서 cctvURL에 데이터 쌓기(반복 or 재귀)
+//        if(!clusterEls.isEmpty()){
+//            WebElement top =  clusterEls.get(0);
+//            top.click();
+//            Thread.sleep(3000);
 //
-////            return sb.toString();  // 결과 반환
-//        } catch (IOException e) {
-//            e.printStackTrace();
-////            return "Error occurred while fetching the DOM elements.";
+//            List<WebElement> ALLClusteredMarkers = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>div"));
+//            System.out.println("ALLClusteredMarkers : " + ALLClusteredMarkers.size());
+//
+//
+//            //다 넣기
+//            clusterEls.addAll(ALLClusteredMarkers);
+//
+//
+//            clusterEls.remove(top); //삭제
 //        }
+//
 //    }
 
+    public void saveCCTVUrl(List<WebElement> list ,WebDriver driver) throws InterruptedException {
+        for(WebElement e : list){
+            e.click();
+            System.out.println(e);
+            Thread.sleep(3000);
+
+            // 새로 열린 모든 창 핸들 가져오기
+            Set<String> allWindowHandles = driver.getWindowHandles();
+
+            // 현재 창의 핸들을 저장
+            String mainWindowHandle = driver.getWindowHandle();
+
+            // 새창 탐색
+            for (String windowHandle : allWindowHandles) {
+                if (!windowHandle.equals(mainWindowHandle)) {
+                    // 새창으로 전환
+                    driver.switchTo().window(windowHandle);
+
+                    // 새창의 URL 확인
+                    String popupURL = driver.getCurrentUrl();
+                    System.out.println("팝업 창 URL: " + popupURL);
+
+                    // 팝업창 닫기
+                    driver.close();
+
+                    // 메인 창으로 다시 전환
+                    driver.switchTo().window(mainWindowHandle);
+                }
+            }
+
+        }
+
+    }
 
 
 
