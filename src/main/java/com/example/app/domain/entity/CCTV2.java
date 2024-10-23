@@ -16,14 +16,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @Entity
-public class Cctv {
+public class CCTV2 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String category;
     private String instlPos;
     private String hlsAddr;
-    private double lot;
     private double lat;
+    private double lon;
     private LocalDateTime lastUpdateAt;
 }
