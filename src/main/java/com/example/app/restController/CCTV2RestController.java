@@ -5,31 +5,15 @@ package com.example.app.restController;
 import com.example.app.domain.entity.CCTV2;
 import com.example.app.domain.repository.CCTV2Respository;
 import io.github.bonigarcia.wdm.WebDriverManager;
-import jakarta.servlet.annotation.WebListener;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -37,7 +21,7 @@ import java.util.*;
 
 @RestController
 @Slf4j
-public class CCTVRestController {
+public class CCTV2RestController {
 
 
 
@@ -74,7 +58,6 @@ public class CCTVRestController {
             // 웹 페이지 열기
             driver.get("https://safecity.busan.go.kr/#/");
 
-
             // 페이지 로드 대기
             Thread.sleep(3000);  // 페이지 로딩을 위해 잠시 대기 (필요 시 명시적으로 대기)
 
@@ -84,58 +67,8 @@ public class CCTVRestController {
             //재난감시 CCTV 클릭
             turnOnCCTV2(driver);
             
-            //
-            WebElement zoominEl = driver.findElement(By.cssSelector(".leaflet-control-zoom-out"));
-
-            zoomInit(zoominEl);
-            Thread.sleep(1500);
-            
-            //최상위 클러스터 클릭
-            WebElement 재난CCTV = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive"));
-            Thread.sleep(1000);
-            WebElement totalValue = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive div span"));
-            Thread.sleep(1000);
-            System.out.println("TOTAL :" + totalValue.getText());
-            재난CCTV.click();
-            Thread.sleep(1000);
-
-            //ONE DEPTH CLUSTER 찾음
-            List<WebElement> ALLClusteredMarkers = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>div"));
-            System.out.println("ALLClusteredMarkers size : " + ALLClusteredMarkers.size());
-            clusterOne.addAll(ALLClusteredMarkers);
-
             //ONE DEPTH TEST
-            for(int i=0;i<clusterOne.size();i++){
-
-                //페이지 새로고침
-                driver.navigate().refresh();
-                Thread.sleep(1000);
-
-                //재난감지 CCTV 클릭
-                turnOnCCTV2(driver);
-
-                //줌OUT
-                Thread.sleep(1000);
-                zoominEl = driver.findElement(By.cssSelector(".leaflet-control-zoom-out"));
-                zoomInit(zoominEl);
-                Thread.sleep(1500);
-                //줌OUT
-
-                //최상위 클러스터 클릭
-                재난CCTV = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive"));
-                재난CCTV.click();
-                Thread.sleep(1000);
-
-                //ONEDEPTH_GET
-                ALLClusteredMarkers = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>div"));
-                WebElement e = ALLClusteredMarkers.get(i);
-                WebElement valEl =  e.findElement((By.cssSelector("div span")));
-                System.out.println("i : "  + i + " VAL : "+  valEl.getText());
-                e.click();
-                
-                Thread.sleep(2000);
-            }
-
+            getOneDepthCCTVUrl(driver);
 
             return null;
         } catch (Exception e) {
@@ -198,33 +131,82 @@ public class CCTVRestController {
     //줌 out
     //--------------------------
     public void zoomInit(WebElement zoominEl) throws InterruptedException {
-        for(int i=0;i<9;i++)
-            zoominEl.click();Thread.sleep(500);
+        for(int i=0;i<9;i++){
+            zoominEl.click();
+            Thread.sleep(500);
+        }
+
     }
     public void zoomInit(WebElement zoominEl,int count) throws InterruptedException {
-        for(int i=0;i<count;i++)
+        for(int i=0;i<count;i++){
             zoominEl.click();Thread.sleep(500);
+        }
+
     }
 
     //ONE DEPTH
     public void getOneDepthCCTVUrl(WebDriver driver) throws InterruptedException {
-
+       
+        //최상위 이동
+        WebElement zoominEl = driver.findElement(By.cssSelector(".leaflet-control-zoom-out"));
+        zoomInit(zoominEl);
 
         //최상위 클러스터 클릭
         WebElement 재난CCTV = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive"));
-        Thread.sleep(1000);
-
         WebElement totalValue = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive div span"));
-        Thread.sleep(1000);
         System.out.println("TOTAL :" + totalValue.getText());
         재난CCTV.click();
+        Thread.sleep(1000);
+
+        //최상위  클릭 이후 카메라 수집
+        List<WebElement> cam  = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>img"));
+        System.out.println("CAM's size : " + cam.size());
+        saveCCTVUrl(cam,driver);
         Thread.sleep(1000);
 
 
         //OneDepth 클러스터 수집
         List<WebElement> ALLClusteredMarkers = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>div"));
-        System.out.println("ALLClusteredMarkers size : " + ALLClusteredMarkers.size());
-        clusterOne.addAll(ALLClusteredMarkers);
+        System.out.println("One DEPTH TOTAL size : " + ALLClusteredMarkers.size());
+
+        List<WebElement> oneDepthList = new ArrayList<>(ALLClusteredMarkers);
+
+
+        //반복해서 OneDepth 기준 카메라 긁어옴
+        for(int i=0;i<oneDepthList.size();i++){
+
+            //페이지 새로고침
+            driver.navigate().refresh();
+
+            //CCTV2 켜기
+            turnOnCCTV2(driver);
+
+
+            //최상위 이동
+            zoominEl = driver.findElement(By.cssSelector(".leaflet-control-zoom-out"));
+            zoomInit(zoominEl);
+            Thread.sleep(1000);
+
+            //최상위 클러스터 클릭
+            재난CCTV = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive"));
+            재난CCTV.click();
+            Thread.sleep(1000);
+
+            //ONEDEPTH_GET
+            List<WebElement> one = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>div"));
+            WebElement e = one.get(i);
+            WebElement valEl =  e.findElement((By.cssSelector("div span")));
+            System.out.println("i : "  + i + "  VAL : "+  valEl.getText());
+            e.click();
+
+            Thread.sleep(2000);
+
+            //카메라 GET
+            cam  = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>img"));
+            System.out.println("CAM's size : " + cam.size());
+            saveCCTVUrl(cam,driver);
+            Thread.sleep(1000);
+        }
 
     }
     //TWO DEPTH
@@ -243,45 +225,55 @@ public class CCTVRestController {
     //--------------------------
     //CCTV URL 받기
     //--------------------------
-    public void saveCCTVUrl(List<WebElement> list ,WebDriver driver) throws InterruptedException {
-        for(WebElement e : list){
-            e.click();
-            System.out.println(e);
-            Thread.sleep(3000);
+    public void saveCCTVUrl(List<WebElement> list ,WebDriver driver)  {
 
-            // 새로 열린 모든 창 핸들 가져오기
-            Set<String> allWindowHandles = driver.getWindowHandles();
+            int i = 1;
+            for (WebElement e : list) {
+                try {
+                    System.out.print("반복 횟수 : " + i + " ");
+                    e.click();
+                    System.out.println(e);
+                    Thread.sleep(1000);
 
-            // 현재 창의 핸들을 저장
-            String mainWindowHandle = driver.getWindowHandle();
+                    // 새로 열린 모든 창 핸들 가져오기
+                    Set<String> allWindowHandles = driver.getWindowHandles();
 
-            // 새창 탐색
-            for (String windowHandle : allWindowHandles) {
-                if (!windowHandle.equals(mainWindowHandle)) {
-                    // 새창으로 전환
-                    driver.switchTo().window(windowHandle);
+                    // 현재 창의 핸들을 저장
+                    String mainWindowHandle = driver.getWindowHandle();
 
-                    // 새창의 URL 확인
-                    String popupURL = driver.getCurrentUrl();
-                    System.out.println("팝업 창 URL: " + popupURL);
+                    // 새창 탐색
+                    for (String windowHandle : allWindowHandles) {
+                        if (!windowHandle.equals(mainWindowHandle)) {
+                            // 새창으로 전환
+                            driver.switchTo().window(windowHandle);
 
-                    //DB저장
-                    if(!cCTV2repository.existsByHlsAddr(popupURL)) {
-                        CCTV2 cctv2 = new CCTV2();
-                        cctv2.setCategory("재난");
-                        cctv2.setHlsAddr(popupURL);
-                        cctv2.setLastUpdateAt(LocalDateTime.now());
-                        cCTV2repository.save(cctv2);
+                            // 새창의 URL 확인
+                            String popupURL = driver.getCurrentUrl();
+                            System.out.println("팝업 창 URL: " + popupURL);
+
+                            //DB저장
+                            if (!cCTV2repository.existsByHlsAddr(popupURL)) {
+                                CCTV2 cctv2 = new CCTV2();
+                                cctv2.setCategory("재난");
+                                cctv2.setHlsAddr(popupURL);
+                                cctv2.setLastUpdateAt(LocalDateTime.now());
+                                cCTV2repository.save(cctv2);
+                            }
+                            // 팝업창 닫기
+                            driver.close();
+
+                            // 메인 창으로 다시 전환
+                            driver.switchTo().window(mainWindowHandle);
+                        }
                     }
-                    // 팝업창 닫기
-                    driver.close();
+                    i++;
 
-                    // 메인 창으로 다시 전환
-                    driver.switchTo().window(mainWindowHandle);
+                }catch(Exception e1){
+                    System.out.print("_!_");
                 }
             }
+            System.out.println();
 
-        }
 
     }
 

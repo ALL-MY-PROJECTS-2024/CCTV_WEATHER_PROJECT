@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @Entity
-public class CCTV2 {
+public class CCTV1 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
