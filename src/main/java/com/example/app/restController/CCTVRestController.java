@@ -99,7 +99,7 @@ public class CCTVRestController {
             재난CCTV.click();
             Thread.sleep(1000);
 
-            //
+            //ONE DEPTH CLUSTER 찾음
             List<WebElement> ALLClusteredMarkers = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>div"));
             System.out.println("ALLClusteredMarkers size : " + ALLClusteredMarkers.size());
             clusterOne.addAll(ALLClusteredMarkers);
@@ -119,7 +119,7 @@ public class CCTVRestController {
                 zoominEl = driver.findElement(By.cssSelector(".leaflet-control-zoom-out"));
                 zoomInit(zoominEl);
                 Thread.sleep(1500);
-
+                //줌OUT
 
                 //최상위 클러스터 클릭
                 재난CCTV = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive"));
@@ -132,7 +132,7 @@ public class CCTVRestController {
                 WebElement valEl =  e.findElement((By.cssSelector("div span")));
                 System.out.println("i : "  + i + " VAL : "+  valEl.getText());
                 e.click();
-
+                
                 Thread.sleep(2000);
             }
 
@@ -209,9 +209,11 @@ public class CCTVRestController {
     //ONE DEPTH
     public void getOneDepthCCTVUrl(WebDriver driver) throws InterruptedException {
 
+
         //최상위 클러스터 클릭
         WebElement 재난CCTV = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive"));
         Thread.sleep(1000);
+
         WebElement totalValue = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive div span"));
         Thread.sleep(1000);
         System.out.println("TOTAL :" + totalValue.getText());
