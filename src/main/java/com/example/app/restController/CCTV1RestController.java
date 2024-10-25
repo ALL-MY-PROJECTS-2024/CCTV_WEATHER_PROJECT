@@ -7,9 +7,7 @@ import com.example.app.domain.repository.CCTV1Respository;
 import com.example.app.domain.repository.CCTV2Respository;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,11 +26,8 @@ import java.util.Set;
 public class CCTV1RestController {
 
 
-
     @Autowired
     private CCTV1Respository cCTV1repository;
-
-
 
 
     List<WebElement> clusterOne = new ArrayList();
@@ -203,11 +198,13 @@ public class CCTV1RestController {
             //ONEDEPTH_GET
             List<WebElement> one = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>div"));
             WebElement e = one.get(i);
+
             WebElement valEl =  e.findElement((By.cssSelector("div span")));
             System.out.println("i : "  + i + "  VAL : "+  valEl.getText());
             e.click();
 
             Thread.sleep(2000);
+
 
             //카메라 GET
             cam  = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>img"));
@@ -292,7 +289,86 @@ public class CCTV1RestController {
 
 
 
-    
+    //----------------------------------------------------------------
 
+    @GetMapping("/snapshot/cctv1")
+    public void test(){
+        log.info("GET /snapshot/cctv1");
+
+        // WebDriverManager를 통해 ChromeDriver 설정
+        WebDriverManager.chromedriver().setup();
+
+        // Headless 모드로 ChromeDriver 설정
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless");  // UI 없이 실행
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+
+        // ChromeDriver 인스턴스 생성
+        WebDriver driver = new ChromeDriver(options);
+        options.setBinary("/bin/google-chrome-stable");
+
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+
+        //ONEDEPTH_GET
+        List<WebElement> list = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>img"));
+
+        int i = 1;
+        for (WebElement e : list) {
+            try {
+                e.click();
+                System.out.println(e);
+                Thread.sleep(1000);
+
+                // 새로 열린 모든 창 핸들 가져오기
+                Set<String> allWindowHandles = driver.getWindowHandles();
+
+                // 현재 창의 핸들을 저장
+                String mainWindowHandle = driver.getWindowHandle();
+
+                // 새창 탐색
+                for (String windowHandle : allWindowHandles) {
+                    if (!windowHandle.equals(mainWindowHandle)) {
+                        // 새창으로 전환
+                        driver.switchTo().window(windowHandle);
+
+                        // 새창의 URL 확인
+                        String popupURL = driver.getCurrentUrl();
+                        System.out.println("팝업 창 URL: " + popupURL);
+                        String  title =  driver.findElement(By.cssSelector(".spot01 .titleBox span")).getText();
+                        System.out.println("title : " + title);
+
+                        //DB저장
+                        if (!cCTV1repository.existsByHlsAddr(popupURL)) {
+                            CCTV1 cctv1 = new CCTV1();
+                            cctv1.setInstlPos(title);
+                            cctv1.setCategory("교통");
+                            cctv1.setHlsAddr(popupURL);
+                            cctv1.setLastUpdateAt(LocalDateTime.now());
+                            cCTV1repository.save(cctv1);
+                        }
+                        // 팝업창 닫기
+                        driver.close();
+
+                        // 메인 창으로 다시 전환
+                        driver.switchTo().window(mainWindowHandle);
+                    }
+                }
+                i++;
+
+            }catch(Exception e1){
+                System.out.print("_!_");
+            }
+        }
+        System.out.println();
+    }
+
+
+
+    @GetMapping("/get/cctv1")
+    public  List<CCTV1>  t1(){
+        log.info("GET /get/cctv1....");
+        return cCTV1repository.findAll();
+    }
 
 }

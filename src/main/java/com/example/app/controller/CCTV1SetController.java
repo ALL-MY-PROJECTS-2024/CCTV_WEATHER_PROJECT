@@ -3,9 +3,15 @@ package com.example.app.controller;
 
 import com.example.app.domain.entity.CCTV1;
 import com.example.app.domain.repository.CCTV1Respository;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -19,7 +25,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Controller
 @Slf4j
@@ -40,10 +49,10 @@ public class CCTV1SetController {
     }
 
     // CCTV 정보를 업데이트하는 API
-    @GetMapping("/update/cctv")
+    @GetMapping("/update/cctv1")
     @ResponseBody
     public String updateCCTV(@RequestParam("id")Long id, @RequestParam("lat")double lat , @RequestParam("lon")double lon ) {
-        log.info("Updating CCTV: " + id + " "+ lat + " " + lon);
+        log.info("Updating CCTV1: " + id + " "+ lat + " " + lon);
         CCTV1 cctv = cctv1Respository.findById(id).orElseThrow();
         cctv.setLat(lat);
         cctv.setLon(lon);
@@ -67,15 +76,13 @@ public class CCTV1SetController {
         String  clientId = "s0femem0gn";
         String secretKey = "SUwuByccz8qwPaALU1SaPKTp9q73Qkg4Xq0yFF7U";
 
-        String url = UriComponentsBuilder.fromHttpUrl("https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode")
-                .queryParam("query", address)
-                .toUriString();
+        String url = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query="+address;
 
         // 헤더에 Client ID와 Client Secret 설정
         HttpHeaders headers = new HttpHeaders();
         headers.set("x-ncp-apigw-api-key-id", clientId);
         headers.set("x-ncp-apigw-api-key", secretKey);
-        headers.set("Content-Type", "application/json");
+        headers.set("Accept", "application/json");
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
@@ -86,6 +93,8 @@ public class CCTV1SetController {
         System.out.println(response.getBody());
 
     }
+
+
 
 
 }

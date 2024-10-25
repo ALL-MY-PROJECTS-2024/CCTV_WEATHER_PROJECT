@@ -20,8 +20,8 @@
 
     <script th:inline="javascript">
         /*<![CDATA[*/
-        // cctv1List 데이터를 JSON 형식으로 JavaScript에 전달
-        var cctvData = [[${cctv1List}]]; // JSON 배열로 변환된 cctv1List
+        // cctv2List 데이터를 JSON 형식으로 JavaScript에 전달
+        var cctvData = [[${cctv2List}]]; // JSON 배열로 변환된 cctv1List
         console.log(cctvData);  // 데이터 확인용 로그 출력
         /*]]>*/
     </script>
@@ -102,7 +102,7 @@
             lat: lat,
             lon: lon
         };
-        axios.get(`/update/cctv1?id=${id}&lat=${lat}&lon=${lon}`)
+        axios.get(`/update/cctv2?id=${id}&lat=${lat}&lon=${lon}`)
             .then(response => {
                 console.log('서버 응답:', response.data);
             })

@@ -102,7 +102,7 @@
             lat: lat,
             lon: lon
         };
-        axios.get(`/update/cctv?id=${id}&lat=${lat}&lon=${lon}`)
+        axios.get(`/update/cctv1?id=${id}&lat=${lat}&lon=${lon}`)
             .then(response => {
                 console.log('서버 응답:', response.data);
             })

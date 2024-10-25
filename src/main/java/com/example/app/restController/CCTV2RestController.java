@@ -2,6 +2,7 @@ package com.example.app.restController;
 
 
 
+import com.example.app.domain.entity.CCTV1;
 import com.example.app.domain.entity.CCTV2;
 import com.example.app.domain.repository.CCTV2Respository;
 import io.github.bonigarcia.wdm.WebDriverManager;
@@ -282,7 +283,11 @@ public class CCTV2RestController {
 
     }
 
-
+    @GetMapping("/get/cctv2")
+    public  List<CCTV2>  t1(){
+        log.info("GET /get/cctv2....");
+        return cCTV2repository.findAll();
+    }
 
     
 //    // 부산광역시_CCTV 설치 현황정보

@@ -68,6 +68,8 @@ public class SecurityConfig {
             auth.requestMatchers("*").permitAll();
             auth.requestMatchers("/set/*").permitAll();
             auth.requestMatchers("/update/*").permitAll();
+            auth.requestMatchers("/position/*").permitAll();
+            auth.requestMatchers("/get/*").permitAll();
 
             auth.anyRequest().authenticated();
         });
