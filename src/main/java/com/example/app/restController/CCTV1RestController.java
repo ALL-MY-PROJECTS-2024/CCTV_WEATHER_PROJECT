@@ -249,6 +249,8 @@ public class CCTV1RestController {
                     // 현재 창의 핸들을 저장
                     String mainWindowHandle = driver.getWindowHandle();
 
+
+
                     // 새창 탐색
                     for (String windowHandle : allWindowHandles) {
                         if (!windowHandle.equals(mainWindowHandle)) {
@@ -258,10 +260,13 @@ public class CCTV1RestController {
                             // 새창의 URL 확인
                             String popupURL = driver.getCurrentUrl();
                             System.out.println("팝업 창 URL: " + popupURL);
+                            String  title =  driver.findElement(By.cssSelector(".spot01 .titleBox span")).getText();
+                            System.out.println("title : " + title);
 
                             //DB저장
                             if (!cCTV1repository.existsByHlsAddr(popupURL)) {
                                 CCTV1 cctv1 = new CCTV1();
+                                cctv1.setInstlPos(title);
                                 cctv1.setCategory("교통");
                                 cctv1.setHlsAddr(popupURL);
                                 cctv1.setLastUpdateAt(LocalDateTime.now());

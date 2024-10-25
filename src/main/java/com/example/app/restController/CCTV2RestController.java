@@ -250,12 +250,17 @@ public class CCTV2RestController {
                             // 새창의 URL 확인
                             String popupURL = driver.getCurrentUrl();
                             System.out.println("팝업 창 URL: " + popupURL);
+                            String  title =  driver.findElement(By.cssSelector(".spot01 .titleBox span")).getText();
+                            System.out.println("title : " + title);
+
 
                             //DB저장
                             if (!cCTV2repository.existsByHlsAddr(popupURL)) {
                                 CCTV2 cctv2 = new CCTV2();
+                                cctv2.setInstlPos(title);
                                 cctv2.setCategory("재난");
                                 cctv2.setHlsAddr(popupURL);
+
                                 cctv2.setLastUpdateAt(LocalDateTime.now());
                                 cCTV2repository.save(cctv2);
                             }

@@ -66,6 +66,9 @@ public class SecurityConfig {
 //            auth.requestMatchers("/","/join","/login").permitAll();
 //            auth.requestMatchers("/main").permitAll();
             auth.requestMatchers("*").permitAll();
+            auth.requestMatchers("/set/*").permitAll();
+            auth.requestMatchers("/update/*").permitAll();
+
             auth.anyRequest().authenticated();
         });
 
