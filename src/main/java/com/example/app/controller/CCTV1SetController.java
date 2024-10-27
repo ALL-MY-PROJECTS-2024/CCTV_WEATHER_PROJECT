@@ -63,36 +63,6 @@ public class CCTV1SetController {
 
 
 
-    @GetMapping("/position")
-    public @ResponseBody void initpos(@RequestParam("address") String address){
-    //https://api.ncloud-docs.com/docs/ai-naver-mapsgeocoding-geocode
-//        네이버
-        //Client ID
-        //(X-NCP-APIGW-API-KEY-ID)  : s0femem0gn
-
-        //Client Secret
-        //(X-NCP-APIGW-API-KEY) : SUwuByccz8qwPaALU1SaPKTp9q73Qkg4Xq0yFF7U
-
-        String  clientId = "s0femem0gn";
-        String secretKey = "SUwuByccz8qwPaALU1SaPKTp9q73Qkg4Xq0yFF7U";
-
-        String url = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query="+address;
-
-        // 헤더에 Client ID와 Client Secret 설정
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("x-ncp-apigw-api-key-id", clientId);
-        headers.set("x-ncp-apigw-api-key", secretKey);
-        headers.set("Accept", "application/json");
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        // API 요청
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-
-        System.out.println(response.getBody());
-
-    }
 
 
 

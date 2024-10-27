@@ -12,6 +12,8 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
@@ -123,10 +125,6 @@ public class CCTV1RestController {
         WebElement CCTVFloodingEl = driver.findElement(By.cssSelector(".induationCheckBox ul li:nth-child(2) .selectOption"));
         if(CCTVFloodingEl.getText().contains("OFF"))
             CCTVFloodingEl.click();
-
-
-
-
 
     }
 
@@ -300,9 +298,6 @@ public class CCTV1RestController {
 
         // Headless 모드로 ChromeDriver 설정
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless");  // UI 없이 실행
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
 
         // ChromeDriver 인스턴스 생성
         WebDriver driver = new ChromeDriver(options);
@@ -370,5 +365,59 @@ public class CCTV1RestController {
         log.info("GET /get/cctv1....");
         return cCTV1repository.findAll();
     }
+
+
+
+    WebDriver opendWebDriver;
+    @GetMapping("/getPos")
+    public void getPos(@RequestParam("searchQuery") String searchQuery) throws InterruptedException {
+        // WebDriverManager를 통해 ChromeDriver 설정
+        WebDriverManager.chromedriver().setup();
+
+        // Headless 모드로 ChromeDriver 설정
+        ChromeOptions options = new ChromeOptions();
+//        options.addArguments("--headless");  // UI 없이 실행
+//        options.addArguments("--no-sandbox");
+//        options.addArguments("--disable-dev-shm-usage");
+
+        // ChromeDriver 인스턴스 생성
+        WebDriver driver = new ChromeDriver(options);
+        options.setBinary("/bin/google-chrome-stable");
+
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+
+        try {
+            // Google Maps 열기
+            driver.get("https://www.google.co.kr/maps/?hl=ko");
+
+            // 검색창 찾기 및 검색어 입력
+            WebElement searchBox = driver.findElement(By.id("searchboxinput"));
+            searchBox.sendKeys(searchQuery);
+            WebElement searchButton = driver.findElement(By.id("searchbox-searchbutton"));
+            searchButton.click();
+
+            // 페이지 로딩 대기 (필요시 대기 시간 조절)
+            Thread.sleep(5000);
+
+            // 자바스크립트를 사용하여 마커 위치의 위도와 경도 가져오기
+            JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
+            Double latitude = (Double) jsExecutor.executeScript("return window.google.maps.LatLng.prototype.lat.call(window.google.maps.event.latLng)");
+            Double longitude = (Double) jsExecutor.executeScript("return window.google.maps.LatLng.prototype.lng.call(window.google.maps.event.latLng)");
+
+            System.out.println("위도: " + latitude + ", 경도: " + longitude);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            // 드라이버 종료
+            driver.quit();
+        }
+
+
+
+    }
+
+
+
 
 }
