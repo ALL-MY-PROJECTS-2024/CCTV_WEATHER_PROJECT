@@ -21,6 +21,7 @@ public class CCTV2 {
     private String instlPos;
     @Column(length = 4096)
     private String hlsAddr;
+    private String address;
     private double lat;
     private double lon;
     private LocalDateTime lastUpdateAt;
