@@ -241,60 +241,78 @@ public class CCTV1RestController {
     //--------------------------
     public void saveCCTVUrl(List<WebElement> list ,WebDriver driver)  {
 
-            int i = 1;
-            for (WebElement e : list) {
-                try {
-                    System.out.print("반복 횟수 : " + i + " ");
-                    e.click();
-                    System.out.println(e);
-                    Thread.sleep(1000);
+        int i = 1;
+        for (WebElement e : list) {
+            try {
+                Thread.sleep(500);
+                System.out.print("반복 횟수 : " + i + " ");
+                e.click();
+                System.out.println(e);
+                Thread.sleep(1000);
 
-                    // 새로 열린 모든 창 핸들 가져오기
-                    Set<String> allWindowHandles = driver.getWindowHandles();
+                // 새로 열린 모든 창 핸들 가져오기
+                Set<String> allWindowHandles = driver.getWindowHandles();
+                Thread.sleep(500);
+                // 현재 창의 핸들을 저장
+                String mainWindowHandle = driver.getWindowHandle();
+                Thread.sleep(500);
 
-                    // 현재 창의 핸들을 저장
-                    String mainWindowHandle = driver.getWindowHandle();
+                // 새창 탐색
+                for (String windowHandle : allWindowHandles) {
+                    if (!windowHandle.equals(mainWindowHandle)) {
+                        // 새창으로 전환
+                        driver.switchTo().window(windowHandle);
+
+                        // 새창의 URL 확인
+                        String popupURL = driver.getCurrentUrl();
+                        System.out.println("팝업 창 URL: " + popupURL);
+                        String  title =  driver.findElement(By.cssSelector(".spot01 .titleBox span")).getText();
+                        System.out.println("title : " + title);
 
 
+                        //DB저장
+                        if (!cCTV1repository.existsByHlsAddr(popupURL)) {
+                            CCTV1 cctv1 = new CCTV1();
+                            cctv1.setInstlPos(title);
 
-                    // 새창 탐색
-                    for (String windowHandle : allWindowHandles) {
-                        if (!windowHandle.equals(mainWindowHandle)) {
-                            // 새창으로 전환
-                            driver.switchTo().window(windowHandle);
+                            // 위치 좌표 검색
+                            Location location = keywordSearch(title);
+                            if(location!=null){
+                                cctv1.setLat(location.getLat());
+                                cctv1.setLon(location.getLng());
 
-                            // 새창의 URL 확인
-                            String popupURL = driver.getCurrentUrl();
-                            System.out.println("팝업 창 URL: " + popupURL);
-                            String  title =  driver.findElement(By.cssSelector(".spot01 .titleBox span")).getText();
-                            System.out.println("title : " + title);
-
-                            //DB저장
-                            if (!cCTV1repository.existsByHlsAddr(popupURL)) {
-                                CCTV1 cctv1 = new CCTV1();
-                                cctv1.setInstlPos(title);
-                                cctv1.setCategory("교통");
-                                cctv1.setHlsAddr(popupURL);
-                                cctv1.setLastUpdateAt(LocalDateTime.now());
-                                cCTV1repository.save(cctv1);
+                            }else{
+                                cctv1.setLat(35.1796);
+                                cctv1.setLon(129.0756);
                             }
-                            // 팝업창 닫기
-                            driver.close();
+                            Thread.sleep(500);
 
-                            // 메인 창으로 다시 전환
-                            driver.switchTo().window(mainWindowHandle);
+                            cctv1.setCategory("교통");
+                            cctv1.setHlsAddr(popupURL);
+
+                            cctv1.setLastUpdateAt(LocalDateTime.now());
+                            cCTV1repository.save(cctv1);
                         }
+                        // 팝업창 닫기
+                        driver.close();
+                        Thread.sleep(500);
+                        // 메인 창으로 다시 전환
+                        driver.switchTo().window(mainWindowHandle);
+                        Thread.sleep(500);
                     }
-                    i++;
-
-                }catch(Exception e1){
-                    System.out.print("_!_");
                 }
-            }
-            System.out.println();
+                i++;
 
+            }catch(Exception e1){
+                System.out.print("_!_");
+            }
+        }
+        System.out.println();
 
     }
+
+
+
 
 
 
@@ -328,10 +346,8 @@ public class CCTV1RestController {
     public void test() {
         System.out.println("GET /snapshot/cctv1");
 
-        WebDriverWait wait = new WebDriverWait(driverTest, Duration.ofSeconds(10));
-
         // 요소 로드 대기 및 요소 목록 가져오기
-        List<WebElement> list = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.cssSelector(".leaflet-pane.leaflet-marker-pane>img")));
+        List<WebElement> list = driverTest.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>img"));
         System.out.println("총 개수 : " + list.size());
 
         String mainWindowHandle = driverTest.getWindowHandle();  // 현재 창 핸들 저장
@@ -339,13 +355,9 @@ public class CCTV1RestController {
 
         for (WebElement e : list) {
             try {
-                // 요소가 화면에 보이도록 스크롤
-                ((JavascriptExecutor) driverTest).executeScript("arguments[0].scrollIntoView(true);", e);
-                Thread.sleep(1000);  // 스크롤 후 대기 시간
-
                 // 요소 클릭
-                e.click();
                 System.out.println(e);
+                e.click();
 
                 // 새로 열린 모든 창 핸들 가져오기
                 Set<String> allWindowHandles = driverTest.getWindowHandles();
@@ -359,7 +371,7 @@ public class CCTV1RestController {
                         // 새창의 URL과 타이틀 확인
                         String popupURL = driverTest.getCurrentUrl();
                         System.out.println("팝업 창 URL: " + popupURL);
-                        String title = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".spot01 .titleBox span"))).getText();
+                        String title =driverTest.findElement(By.cssSelector(".spot01 .titleBox span")).getText();
                         System.out.println("title : " + title);
 
                         // DB 저장 확인 후 저장
@@ -393,16 +405,11 @@ public class CCTV1RestController {
         System.out.println("종료!!");
     }
 
-
-
-
-
     @GetMapping("/get/cctv1")
     public  List<CCTV1>  t1(){
         log.info("GET /get/cctv1....");
         return cCTV1repository.findAll();
     }
-
 
 
     WebDriver opendWebDriver;
@@ -495,6 +502,7 @@ public class CCTV1RestController {
                 .build()
                 .toUri();
         Root response =  restTemplate.getForObject(uri, Root.class);
+        System.out.println(response);
         if(response.results!=null && response.results.size()!=0){
             Location location1 =  response.getResults().get(0).getGeometry().getLocation();
             return location1;
