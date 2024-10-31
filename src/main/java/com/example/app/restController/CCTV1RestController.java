@@ -224,7 +224,70 @@ public class CCTV1RestController {
 
     }
     //TWO DEPTH
-    public void getTwoDepthCCTVUrl(){
+    public void getTwoDepthCCTVUrl(WebDriver driver) throws InterruptedException {
+        //최상위 이동
+        WebElement zoominEl = driver.findElement(By.cssSelector(".leaflet-control-zoom-out"));
+        zoomInit(zoominEl);
+
+        //최상위 클러스터 클릭
+        WebElement 재난CCTV = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive"));
+        WebElement totalValue = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive div span"));
+        System.out.println("TOTAL :" + totalValue.getText());
+        재난CCTV.click();
+        Thread.sleep(1000);
+
+        //최상위  클릭 이후 카메라 수집
+        List<WebElement> cam  = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>img"));
+        System.out.println("CAM's size : " + cam.size());
+        saveCCTVUrl(cam,driver);
+        Thread.sleep(1000);
+
+
+        //OneDepth 클러스터 수집
+        List<WebElement> ALLClusteredMarkers = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>div"));
+        System.out.println("One DEPTH TOTAL size : " + ALLClusteredMarkers.size());
+
+        List<WebElement> oneDepthList = new ArrayList<>(ALLClusteredMarkers);
+
+
+        //반복해서 OneDepth 기준 카메라 긁어옴
+        for(int i=0;i<oneDepthList.size();i++){
+
+            //페이지 새로고침
+            driver.navigate().refresh();
+
+            //CCTV2 켜기
+            turnOnCCTV1(driver);
+
+
+            //최상위 이동
+            zoominEl = driver.findElement(By.cssSelector(".leaflet-control-zoom-out"));
+            zoomInit(zoominEl);
+            Thread.sleep(1000);
+
+            //최상위 클러스터 클릭
+            재난CCTV = driver.findElement(By.cssSelector(".leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive"));
+            재난CCTV.click();
+            Thread.sleep(1000);
+
+            //ONEDEPTH_GET
+            List<WebElement> one = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>div"));
+            WebElement e = one.get(i);
+
+            WebElement valEl =  e.findElement((By.cssSelector("div span")));
+            System.out.println("i : "  + i + "  VAL : "+  valEl.getText());
+            e.click();
+
+            Thread.sleep(2000);
+
+
+            //카메라 GET
+            cam  = driver.findElements(By.cssSelector(".leaflet-pane.leaflet-marker-pane>img"));
+            System.out.println("CAM's size : " + cam.size());
+            saveCCTVUrl(cam,driver);
+            Thread.sleep(1000);
+        }
+
 
     }
     //THREE DEPTH
@@ -357,7 +420,8 @@ public class CCTV1RestController {
             try {
                 // 요소 클릭
                 System.out.println(e);
-                e.click();
+
+                e.sendKeys(Keys.ENTER);
 
                 // 새로 열린 모든 창 핸들 가져오기
                 Set<String> allWindowHandles = driverTest.getWindowHandles();

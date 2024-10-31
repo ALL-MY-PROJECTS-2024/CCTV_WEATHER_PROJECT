@@ -73,6 +73,7 @@ public class SecurityConfig {
             auth.requestMatchers("/getPos/*").permitAll();
             auth.requestMatchers("/open/*").permitAll();
             auth.requestMatchers("/snapshot/*").permitAll();
+            auth.requestMatchers("/bSearch/*").permitAll();
 
 
             auth.anyRequest().authenticated();
