@@ -17,6 +17,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -33,6 +34,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+
+/*
+*   재난 CCTV
+* */
 
 @RestController
 @Slf4j
@@ -418,10 +423,9 @@ public class CCTV1RestController {
 
         for (WebElement e : list) {
             try {
-                // 요소 클릭
-                System.out.println(e);
-
-                e.sendKeys(Keys.ENTER);
+                // 요소 클릭 (JavaScriptExecutor로 클릭)
+                JavascriptExecutor js = (JavascriptExecutor) driverTest;
+                js.executeScript("arguments[0].click();", e);
 
                 // 새로 열린 모든 창 핸들 가져오기
                 Set<String> allWindowHandles = driverTest.getWindowHandles();
@@ -432,44 +436,73 @@ public class CCTV1RestController {
                         // 새창으로 전환
                         driverTest.switchTo().window(windowHandle);
 
-                        // 새창의 URL과 타이틀 확인
+                        // 팝업 창 URL 확인
                         String popupURL = driverTest.getCurrentUrl();
                         System.out.println("팝업 창 URL: " + popupURL);
-                        String title =driverTest.findElement(By.cssSelector(".spot01 .titleBox span")).getText();
-                        System.out.println("title : " + title);
 
-                        // DB 저장 확인 후 저장
-                        if (!cCTV1repository.existsByHlsAddr(popupURL)) {
-                            CCTV1 cctv1 = new CCTV1();
-                            cctv1.setInstlPos(title);
+                        // WebDriverWait를 통해 타이틀 요소가 로딩될 때까지 기다림
+                        try {
+                            WebDriverWait wait = new WebDriverWait(driverTest, Duration.ofSeconds(10));
+                            //타이틀이 없을수도 -예외처리할것!..
+                            String title = null;
+                            try {
+                                WebElement titleElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".spot01 .titleBox span")));
+                                title = titleElement.getText();
+                                System.out.println("title : " + title);
+                            }catch(Exception eee){
 
-                            // 위치 좌표 검색
-                            Location location = keywordSearch(title);
-                            cctv1.setLat(location.getLat());
-                            cctv1.setLon(location.getLng());
+                                System.out.println("SPOT01 TITLE 찾을수 없음");
+                                WebElement titleElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".spot02 .titleBox span")));
+                                title = titleElement.getText();
+                                System.out.println("title : " + title);
 
-                            cctv1.setCategory("교통");
-                            cctv1.setHlsAddr(popupURL);
-                            cctv1.setLastUpdateAt(LocalDateTime.now());
-                            cCTV1repository.save(cctv1);
+                            }
+
+                            // DB 저장 확인 후 저장
+                            if (!cCTV1repository.existsByHlsAddr(popupURL)) {
+                                CCTV1 cctv1 = new CCTV1();
+                                cctv1.setInstlPos(title);
+
+                                // 위치 좌표 검색
+                                Location location = keywordSearch(title);
+                                if (location != null) {
+                                    cctv1.setLat(location.getLat());
+                                    cctv1.setLon(location.getLng());
+                                } else {
+                                    // 부산시 중심 좌표 (부산시청 부근)
+                                    cctv1.setLat(35.1796);
+                                    cctv1.setLon(129.0756);
+                                }
+
+                                cctv1.setCategory("교통");
+                                cctv1.setHlsAddr(popupURL);
+                                cctv1.setLastUpdateAt(LocalDateTime.now());
+                                cCTV1repository.save(cctv1);
+                            } else {
+                                System.out.println("DB에 있음!");
+                            }
+
+                        } catch (NoSuchElementException e22) {
+                            System.out.println("요소를 찾을 수 없습니다: " + e22);
+                        } finally {
+                            // 팝업 창 닫기 및 메인 창으로 복귀
+                            driverTest.close();
+                            driverTest.switchTo().window(mainWindowHandle);
+                            Thread.sleep(2000);
                         }
-
-                        // 팝업 창 닫기 및 메인 창으로 복귀
-                        driverTest.close();
-                        driverTest.switchTo().window(mainWindowHandle);
-                        Thread.sleep(1000);
                     }
                 }
                 i++;
 
             } catch (Exception e1) {
-                System.out.println("_!_" + e1);
+                System.out.println("_!_ 오류 발생: " + e1);
             }
         }
         System.out.println("종료!!");
     }
 
-    @GetMapping("/get/cctv1")
+
+    @GetMapping(value = "/get/cctv1" ,produces = MediaType.APPLICATION_JSON_VALUE)
     public  List<CCTV1>  t1(){
         log.info("GET /get/cctv1....");
         return cCTV1repository.findAll();

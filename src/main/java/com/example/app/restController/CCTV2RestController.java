@@ -22,7 +22,7 @@ import java.util.*;
 
 @RestController
 @Slf4j
-public class CCTV2RestController {
+public class  CCTV2RestController {
 
 
 
