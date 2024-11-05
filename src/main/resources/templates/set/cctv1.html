@@ -21,7 +21,7 @@
 
         .controller {
             width: 200px;
-            height: 60px;
+            height: 65px;
             position: fixed;
             top: 100px;
             left: 10px;
@@ -38,16 +38,17 @@
             display:flex;
             justify-content : center;
             align-items : center;
-            gap : 15px;
+            gap : 10px;
         }
-        #createMarkerButton{
+        #createMarkerButton .image-block{
             width : 35px;
             height : 35px;
             border : 1px solid;
             background-color:white;
         }
         #createMarkerButton img{
-            width : 100%;height : 100%;
+            width : 100%;
+            height : 100%;
         }
         .controller .label{
             font-size : .7rem;
@@ -57,6 +58,11 @@
             height: 100vh;
             width: 100%;
         }
+        input[type="text"] {
+            font-size : .8rem;
+        }
+
+
     </style>
 
     <script th:inline="javascript">
@@ -77,7 +83,7 @@
 
     <div class="controller" >
         <div id="createMarkerButton" draggable="true">
-            <div>
+            <div class="image-block">
                 <img src="https://safecity.busan.go.kr/vue/img/gis_picker_cctv_city.a17cfe5e.png">
             </div>
             <div class="label">
@@ -114,8 +120,13 @@
 
     // 2. CCTV 마커 생성 함수 정의
     function createCCTVMarker(cctv) {
+        // 지도의 현재 중심 위치를 가져옴
+        var center = map.getCenter();
+        console.log('center',center);
+
         var markerLat = (cctv.lat === 0.0 && cctv.lon === 0.0) ? busanEduLat : cctv.lat;
         var markerLon = (cctv.lat === 0.0 && cctv.lon === 0.0) ? busanEduLon : cctv.lon;
+
         var markerPosition = new kakao.maps.LatLng(markerLat, markerLon);
 
         var marker = new kakao.maps.Marker({
@@ -127,17 +138,17 @@
 
         // 수정 가능한 정보창 내용 설정
         var infoContent = document.createElement('div');
-       infoContent.style.cssText = `
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: white;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-            width: 200px;
-            position:relative;
-        `;
+        infoContent.style.cssText = `
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                background-color: white;
+                box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+                font-family: Arial, sans-serif;
+                font-size: 12px;
+                width: 200px;
+                position:relative;
+            `;
 
         // 닫기 버튼 생성 및 스타일 설정
         var closeButton = document.createElement('button');
@@ -292,32 +303,40 @@
     mapContainer.addEventListener('drop', function(event) {
         event.preventDefault();
 
+        // 마우스 위치 가져오기
         var mouseX = event.clientX;
         var mouseY = event.clientY;
 
+        // 지도의 현재 중심 좌표 가져오기
+        var center = map.getCenter();
+
+        // 화면에서 지도 컨테이너 위치 보정하기
+        var containerBounds = mapContainer.getBoundingClientRect();
+        var relativeX = mouseX - containerBounds.left;
+        var relativeY = mouseY - containerBounds.top;
+
+        // 화면 좌표를 지도의 좌표로 변환 (지도 상에서 마우스 위치에 해당하는 지리 좌표를 얻기)
         var proj = map.getProjection();
-        var point = new kakao.maps.Point(mouseX, mouseY);
-        var latlng = proj.coordsFromPoint(point);
+        var point = new kakao.maps.Point(relativeX, relativeY);
+        var latlng = proj.coordsFromContainerPoint(point);
 
         // 현재 날짜와 시간 생성
         var now = new Date();
-        // ISO 8601 형식으로 변환 (UTC 시간 기준)
-        var isoString = now.toISOString();
-        // 타임존 정보를 제외하고 Java의 LocalDateTime 형식으로 만들기 위해 수정
-        var localDateTimeString = isoString.slice(0, -1); // 마지막 "Z"를 제거하여 로컬 형식으로 변환
+        var isoString = now.toISOString();                  // ISO 8601 형식으로 변환 (UTC 시간 기준)
+        var localDateTimeString = isoString.slice(0, -1);   // 마지막 "Z"를 제거하여 로컬 형식으로 변환
 
-        var obj =
-        {
+        var obj = {
             "id": null,
             "category": null,
             "instlPos": null,
             "hlsAddr": null,
             "address": null,
-            "lat": latlng.Ma,
-            "lon": latlng.La,
+            "lat": latlng.getLat(),   // 변환된 마우스 좌표의 위도 사용
+            "lon": latlng.getLng(),   // 변환된 마우스 좌표의 경도 사용
             "lastUpdateAt": localDateTimeString
         }
-        console.log('obj',obj);
+
+        console.log('obj', obj);
         createCCTVMarker(obj);
     });
 </script>
