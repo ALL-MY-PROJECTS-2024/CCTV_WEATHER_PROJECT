@@ -193,7 +193,7 @@
         locationInput.setAttribute('style','height:25px');
         locationInput.type = 'text';
         locationInput.value = cctv.instlPos;
-        locationInput.placeholder = "Location";
+        locationInput.placeholder = "위치정보";
 
         var dateTimeInput = document.createElement('input');
         dateTimeInput.className="form-control";
@@ -207,17 +207,50 @@
         hlsAddrInput.setAttribute('style','height:25px');
         hlsAddrInput.type = 'text';
         hlsAddrInput.value = cctv.hlsAddr;
-        hlsAddrInput.placeholder = "id";
+        hlsAddrInput.placeholder = "CCTV카메라 링크";
 
+        var searchInput = document.createElement('input');
+        searchInput.className="form-control";
+        searchInput.setAttribute('style','height:25px');
+        searchInput.type = 'text';
+        searchInput.value = '';
+        searchInput.setAttribute('style','font-size:.8rem;width:70%;display:inline-block;');
+        searchInput.placeholder = "부산지역 검색";
+
+        var searchButton = document.createElement('button');
+        searchButton.textContent = '검색';
+        searchButton.className="btn btn-success text-light me-2";
+        searchButton.setAttribute('style','font-size:.7rem;width:40px;height:36px;padding:2px;margin-left:5px;');
+        searchButton.onclick = function() {
+            var searchKeyword = searchInput.value;
+            searchAddress(searchKeyword,cctv,marker);
+            infoWindow.close();  // 정보창 닫기
+        };
 
 
         var saveButton = document.createElement('button');
         saveButton.textContent = 'Save';
-        saveButton.className="btn btn-warning text-light";
+        saveButton.className="btn btn-warning text-light me-2";
         saveButton.onclick = function() {
-            cctv.instlPos = locationInput.value;
+
+            cctv.id = idInput.value;
             cctv.category = categoryInput.value;
-            updateCCTVData(cctv.id, cctv.instlPos, cctv.category);
+            cctv.instlPos = locationInput.value;
+            cctv.dateTime = dateTimeInput.value;
+            cctv.hlsAddr = hlsAddrInput.value;
+
+            updateCCTVData(cctv);
+            infoWindow.close();  // 정보창 닫기
+        };
+
+        var deleteButton = document.createElement('button');
+        deleteButton.textContent = 'del';
+        deleteButton.className="btn btn-danger text-light";
+        deleteButton.onclick = function() {
+            if(confirm('정말 삭제하시겠습니까?')){
+                deleteCCTVData(cctv,marker);
+                alert("삭제완료");
+            }
             infoWindow.close();  // 정보창 닫기
         };
 
@@ -244,8 +277,17 @@
         infoContent.appendChild(hlsAddrInput);
         infoContent.appendChild(document.createElement('br'));
 
+        infoContent.appendChild(document.createTextNode('search : '));
+        infoContent.appendChild(document.createElement('br'));
+        infoContent.appendChild(document.createTextNode('(좌표 존재시 이동)'));
+        infoContent.appendChild(document.createElement('br'));
+        infoContent.appendChild(searchInput);
+        infoContent.appendChild(searchButton);
+        infoContent.appendChild(document.createElement('br'));
+
         infoContent.appendChild(document.createElement('br'));
         infoContent.appendChild(saveButton);
+        infoContent.appendChild(deleteButton);
 
         var infoWindow = new kakao.maps.InfoWindow({
             content: infoContent
@@ -265,16 +307,62 @@
     }
 
 
+    // KEYWORD 로 주소 검색 함수
+    function searchAddress(keyword,cctv,marker) {
+        console.log(keyword,cctv,marker);
+        axios.get(`/search`,{params : {"keyword" : keyword}})
+            .then(response => {
+                console.log('서버 응답:', response.data);
+                const latLng =response.data;
+                console.log(typeof latlng);
+                if(response.data){
+                    //DB 좌표정보 변경
+                    updateCCTVCoordinates(cctv.id, latLng.lat, latLng.lng)
+                    //기존 마커의 좌표변경
+                    var newPosition = new kakao.maps.LatLng(latLng.lat, latLng.lng);
+                    marker.setPosition(newPosition); // 마커의 위치를 검색된 좌표로 이동
+
+                    // 지도 중심 좌표를 이동된 마커 위치로 지정
+                    map.setCenter(newPosition);
+                }else{
+                    alert("주소 검색이 되지않습니다.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+
+        });
+    }
+
     // cctv 데이터 업데이트 함수
-    function updateCCTVData(id, instlPos, category) {
-        axios.post(`/update/cctv1`, { id, instlPos, category })
+    function updateCCTVData(cctv) {
+        console.log(cctv);
+        axios.get(`/cctv1/maker/update`,{params : cctv})
             .then(response => {
                 console.log('서버 응답:', response.data);
             })
             .catch(error => {
                 console.error('Error:', error);
-            });
+        });
     }
+
+    // cctv 데이터 삭제 함수
+    function deleteCCTVData(cctv,marker) {
+        console.log(cctv);
+        axios.get(`/cctv1/maker/delete`,{params : cctv})
+            .then(response => {
+                console.log('서버 응답:', response.data);
+                // 서버 응답 후 지도에서 마커 제거 및 배열에서 삭제
+                marker.setMap(null); // 지도에서 마커 제거
+
+                // 배열에서 해당 마커와 cctv 정보를 삭제
+                markers = markers.filter(item => item.cctv.id !== cctv.id);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+        });
+    }
+
 
     // 기존 좌표 업데이트 함수
     function updateCCTVCoordinates(id, lat, lon) {
@@ -325,20 +413,35 @@
         var isoString = now.toISOString();                  // ISO 8601 형식으로 변환 (UTC 시간 기준)
         var localDateTimeString = isoString.slice(0, -1);   // 마지막 "Z"를 제거하여 로컬 형식으로 변환
 
-        var obj = {
-            "id": null,
-            "category": null,
-            "instlPos": null,
-            "hlsAddr": null,
-            "address": null,
-            "lat": latlng.getLat(),   // 변환된 마우스 좌표의 위도 사용
-            "lon": latlng.getLng(),   // 변환된 마우스 좌표의 경도 사용
-            "lastUpdateAt": localDateTimeString
-        }
+        //
+        axios.get(`/cctv1/maker/new?lat=${latlng.getLat()}&lon=${latlng.getLng()}`)
+            .then(response => {
+                console.log('서버 응답:', response.data);
+                const cctv_id = response.data.id;
+                var obj = {
+                        "id": cctv_id,
+                        "category": null,
+                        "instlPos": null,
+                        "hlsAddr": null,
+                        "address": null,
+                        "lat": latlng.getLat(),   // 변환된 마우스 좌표의 위도 사용
+                        "lon": latlng.getLng(),   // 변환된 마우스 좌표의 경도 사용
+                        "lastUpdateAt": localDateTimeString
+                }
+                createCCTVMarker(obj);
 
-        console.log('obj', obj);
-        createCCTVMarker(obj);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+        });
+
+
+
     });
+
+
+
+
 </script>
 </body>
 </html>

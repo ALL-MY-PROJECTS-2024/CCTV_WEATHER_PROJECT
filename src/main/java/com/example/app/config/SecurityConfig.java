@@ -75,6 +75,14 @@ public class SecurityConfig {
             auth.requestMatchers("/snapshot/*").permitAll();
             auth.requestMatchers("/bSearch/*").permitAll();
 
+            auth.requestMatchers("/cctv1/maker/new").permitAll();
+            auth.requestMatchers("/cctv1/maker/update").permitAll();
+            auth.requestMatchers("/cctv1/maker/delete").permitAll();
+
+            auth.requestMatchers("/cctv2/maker/new").permitAll();
+            auth.requestMatchers("/cctv2/maker/update").permitAll();
+            auth.requestMatchers("/cctv2/maker/delete").permitAll();
+
 
             auth.anyRequest().authenticated();
         });
