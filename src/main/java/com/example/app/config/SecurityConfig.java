@@ -35,6 +35,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import javax.sql.DataSource;
+import java.util.Arrays;
 import java.util.Collections;
 
 @Configuration
@@ -160,7 +161,13 @@ public class SecurityConfig {
             CorsConfiguration config = new CorsConfiguration();
             config.setAllowedHeaders(Collections.singletonList("*"));
             config.setAllowedMethods(Collections.singletonList("*"));
-            config.setAllowedOriginPatterns(Collections.singletonList("http://127.0.0.1:3000")); // ⭐️ 허용할 origin
+            // 여러 Origin을 허용하기 위해 리스트로 설정
+            config.setAllowedOriginPatterns(Arrays.asList(
+                    "http://127.0.0.1:3000",
+                    "http://localhost:3000",
+                    "https://all-my-projects-2024.github.io/CCTV_WEATHER_PROJECT_FN/" // 추가할 Origin
+                    // 필요한 만큼 Origin을 추가
+            ));
             config.setAllowCredentials(true);
             return config;
         };
