@@ -5,16 +5,12 @@ import com.example.app.config.auth.exceptionHandler.CustomAuthenticationEntryPoi
 import com.example.app.config.auth.jwt.JwtAuthorizationFilter;
 import com.example.app.config.auth.jwt.JwtProperties;
 import com.example.app.config.auth.jwt.JwtTokenProvider;
-import com.example.app.config.auth.loginHandler.CustomAuthenticationFailureHandler;
-import com.example.app.config.auth.loginHandler.CustomLoginSuccessHandler;
 import com.example.app.config.auth.loginHandler.OAuth2JwtLoginSuccessHandler;
 import com.example.app.config.auth.logoutHandler.CustomLogoutHandler;
 import com.example.app.config.auth.logoutHandler.CustomLogoutSuccessHandler;
-import com.example.app.domain.entity.Token;
 import com.example.app.domain.repository.TokenRepository;
 import com.example.app.domain.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.batch.BatchProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,14 +18,9 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -83,6 +74,10 @@ public class SecurityConfig {
             auth.requestMatchers("/cctv2/maker/new").permitAll();
             auth.requestMatchers("/cctv2/maker/update").permitAll();
             auth.requestMatchers("/cctv2/maker/delete").permitAll();
+
+            auth.requestMatchers("/flooding/maker/new").permitAll();
+            auth.requestMatchers("/flooding/maker/update").permitAll();
+            auth.requestMatchers("/flooding/maker/delete").permitAll();
 
 
             auth.anyRequest().authenticated();
